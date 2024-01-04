@@ -2,25 +2,22 @@ package com.example.vacationplanner
 
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.example.vacationplanner.api_data.GlideApp
 import com.example.vacationplanner.api_data.WeatherAPIService
 import com.example.vacationplanner.api_data.response.APIResponse
 import com.example.vacationplanner.api_data.response.WeatherDetails
 import com.example.vacationplanner.model.VacationData
 import com.example.vacationplanner.view.WeatherAdapter
-import com.squareup.picasso.Picasso
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 // apel api: https://api.openweathermap.org/data/2.5/forecast?q=Bucharest&units=metric&appid=5699730c4a635c04e2f0edf20b7fb368
 

@@ -3,33 +3,38 @@ package com.example.vacationplanner
 import android.app.*
 import android.content.Context
 import android.content.Intent
-import android.icu.util.TimeUnit
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.SystemClock
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.vacationplanner.application.VacationApplication
 import com.example.vacationplanner.model.VacationData
 import com.example.vacationplanner.view.VacationAdapter
+import com.example.vacationplanner.viewmodel.VacationViewModel
+import com.example.vacationplanner.viewmodel.VacationViewModelFactory
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
-
+import androidx.activity.viewModels
+import com.example.vacationplanner.database.VacationEntity
 
 class MainActivity : AppCompatActivity() {
     private lateinit var addButton : FloatingActionButton
     private lateinit var recView : RecyclerView
+
+    private val vacationViewModel: VacationViewModel by viewModels {
+        VacationViewModelFactory((application as VacationApplication).repository)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +43,7 @@ class MainActivity : AppCompatActivity() {
         //retrieve existing vacation details from shared prefs
         val sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
         val json = sharedPreferences.getString("vacationList", null)
+
         val list : List<VacationData>? = if (json != null) {
             val type = object : TypeToken<List<VacationData>>() {}.type
             Gson().fromJson<List<VacationData>>(json, type)
@@ -49,10 +55,17 @@ class MainActivity : AppCompatActivity() {
         addButton = findViewById(R.id.floatingButton)
         recView = findViewById(R.id.recycleview)
 
-        vacationAdapter = VacationAdapter(this, vacationList as ArrayList<VacationData>)
+
+        vacationAdapter = VacationAdapter()
 
         recView.layoutManager = LinearLayoutManager(this)
         recView.adapter = vacationAdapter
+
+        vacationViewModel.allVacations.observe(this) {
+                vacations -> vacations.let{
+                    vacationAdapter.submitList(it)
+                }
+        }
 
         addButton.setOnClickListener {
             val inflater = LayoutInflater.from(this)
@@ -95,6 +108,9 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Adding vacation...", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
 
+                val vacationEntity = VacationEntity(name, date, days)
+                vacationViewModel.insert(vacationEntity)
+
                 val editor = sharedPreferences.edit()
                 val updatedJson = Gson().toJson(vacationList)
                 editor.putString("vacationList", updatedJson)
@@ -135,18 +151,18 @@ class MainActivity : AppCompatActivity() {
             addDialog.show()
         }
 
-        vacationAdapter.onItemClick = {
-            val start = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(it.startDate)
-
-            // the API only gives the forecast for 5 days on free version; this is what I'm checking here
-            if (isDateWithinRange(start)) {
-                val intent = Intent(this, WeatherForecastForCity::class.java)
-                intent.putExtra("vacationdata", it)
-                startActivity(intent)
-            } else {
-                Toast.makeText(this, "Wait until you get closer to the start date of your vacation", Toast.LENGTH_SHORT).show()
-            }
-        }
+//        vacationAdapter.onItemClick = {
+//            val start = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(it.startDate)
+//
+//            // the API only gives the forecast for 5 days on free version; this is what I'm checking here
+//            if (isDateWithinRange(start)) {
+//                val intent = Intent(this, WeatherForecastForCity::class.java)
+//                intent.putExtra("vacationdata", it)
+//                startActivity(intent)
+//            } else {
+//                Toast.makeText(this, "Wait until you get closer to the start date of your vacation", Toast.LENGTH_SHORT).show()
+//            }
+//        }
 
     }
 

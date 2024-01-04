@@ -8,25 +8,33 @@ import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
+import androidx.recyclerview.widget.ListAdapter
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vacationplanner.R
+import com.example.vacationplanner.database.VacationEntity
 import com.example.vacationplanner.model.VacationData
 import com.example.vacationplanner.service.ImageDownloader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.example.vacationplanner.view.VacationAdapter.VacationViewHolder
 
-class VacationAdapter(val c: Context, val vacationList: ArrayList<VacationData>) : RecyclerView.Adapter<VacationAdapter.VacationViewHolder>() {
-    var onItemClick : ((VacationData) -> Unit)? = null
+class VacationAdapter : ListAdapter<VacationEntity, VacationViewHolder>() {
 
-    inner class VacationViewHolder(val v: View) : RecyclerView.ViewHolder(v) {
-        val city_name = v.findViewById<TextView>(R.id.cityname)
-        val start_date = v.findViewById<TextView>(R.id.startdate)
-        val nr_days = v.findViewById<TextView>(R.id.nrofdays)
+    constructor(itemCallback: DiffUtil.ItemCallback<VacationEntity>) : super(itemCallback) {
+        // Your additional initialization code, if any
     }
+
+    var onItemClick : ((VacationData) -> Unit)? = null
+        class VacationViewHolder(val v: View) : RecyclerView.ViewHolder(v) {
+
+            val city_name = v.findViewById<TextView>(R.id.cityname)
+            val start_date = v.findViewById<TextView>(R.id.startdate)
+            val nr_days = v.findViewById<TextView>(R.id.nrofdays)
+        }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VacationViewHolder {
         val inflater = LayoutInflater.from(parent.context)
