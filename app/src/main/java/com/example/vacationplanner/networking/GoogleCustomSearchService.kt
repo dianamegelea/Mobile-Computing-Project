@@ -1,4 +1,4 @@
-package com.example.vacationplanner.service
+package com.example.vacationplanner.networking
 
 import com.example.vacationplanner.model.SearchResponse
 import retrofit2.http.GET

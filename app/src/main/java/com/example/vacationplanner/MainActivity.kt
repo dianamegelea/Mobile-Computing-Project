@@ -1,13 +1,12 @@
 package com.example.vacationplanner
 
+import android.annotation.SuppressLint
 import android.app.*
 import android.content.Context
 import android.content.Intent
-import android.icu.util.TimeUnit
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.SystemClock
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -15,10 +14,13 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vacationplanner.model.VacationData
 import com.example.vacationplanner.view.VacationAdapter
+import com.example.vacationplanner.viewmodels.AppViewModel
+import com.example.vacationplanner.viewmodels.AppViewModelFactory
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -31,6 +33,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var addButton : FloatingActionButton
     private lateinit var recView : RecyclerView
 
+    private lateinit var appViewModel: AppViewModel
+
+    @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -44,12 +49,15 @@ class MainActivity : AppCompatActivity() {
         } else {
             mutableListOf()
         }
+
+        appViewModel = ViewModelProvider(this, AppViewModelFactory())[AppViewModel::class.java]
+
         vacationList = ArrayList(list.orEmpty())
 
         addButton = findViewById(R.id.floatingButton)
         recView = findViewById(R.id.recycleview)
 
-        vacationAdapter = VacationAdapter(this, vacationList as ArrayList<VacationData>)
+        vacationAdapter = appViewModel.getVacationAdapter();
 
         recView.layoutManager = LinearLayoutManager(this)
         recView.adapter = vacationAdapter
@@ -73,8 +81,8 @@ class MainActivity : AppCompatActivity() {
 
                 val datePickerDialog = DatePickerDialog(
                     this,
-                    { view, year, monthOfYear, dayOfMonth ->
-                        val dat = (dayOfMonth.toString() + "/" + (monthOfYear + 1) + "/" + year)
+                    { _, pickerYear, monthOfYear, dayOfMonth ->
+                        val dat = (dayOfMonth.toString() + "/" + (monthOfYear + 1) + "/" + pickerYear)
                         startDate.setText(dat)
                     },
                     year,
@@ -100,32 +108,32 @@ class MainActivity : AppCompatActivity() {
                 editor.putString("vacationList", updatedJson)
                 editor.apply()
 
-                val daysDifference = getDaysDifference(date)
-                if (daysDifference <= 3) {
-                    displayNotification("Upcoming Vacation", "Your vacation to $name starts in $daysDifference days")
-                } else {
-                    val notificationId = System.currentTimeMillis().toInt()
+//                val daysDifference = getDaysDifference(date)
+//                if (daysDifference <= 3) {
+//                    displayNotification("Upcoming Vacation", "Your vacation to $name starts in $daysDifference days")
+//                } else {
+//                    val notificationId = System.currentTimeMillis().toInt()
+//
+//                    val calendar = Calendar.getInstance().apply {
+//                        timeInMillis = System.currentTimeMillis()
+//                        /*add(Calendar.DAY_OF_MONTH, daysDifference.toInt() - 3)
+//                        set(Calendar.HOUR_OF_DAY, 0)
+//                        set(Calendar.MINUTE, 0)
+//                        set(Calendar.SECOND, 0)*/
+//                        add(Calendar.MINUTE, 1) // for testing purposes
+//                    }
 
-                    val calendar = Calendar.getInstance().apply {
-                        timeInMillis = System.currentTimeMillis()
-                        /*add(Calendar.DAY_OF_MONTH, daysDifference.toInt() - 3)
-                        set(Calendar.HOUR_OF_DAY, 0)
-                        set(Calendar.MINUTE, 0)
-                        set(Calendar.SECOND, 0)*/
-                        add(Calendar.MINUTE, 1) // for testing purposes
-                    }
-
-                    val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                    val intent = Intent(this, NotificationReceiver::class.java).apply {
-                        putExtra("notificationId", notificationId)
-                        putExtra("notificationTitle", "Upcoming Vacation")
-                        putExtra("notificationContent", "Your vacation to $name starts in 3 days")
-                    }
-                    val pendingIntent = PendingIntent.getBroadcast(this, vacationData.hashCode(), intent, PendingIntent.FLAG_IMMUTABLE)
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
-                }
-
+//                    val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+//                    val intent = Intent(this, NotificationReceiver::class.java).apply {
+//                        putExtra("notificationId", notificationId)
+//                        putExtra("notificationTitle", "Upcoming Vacation")
+//                        putExtra("notificationContent", "Your vacation to $name starts in 3 days")
+//                    }
+//                    val pendingIntent = PendingIntent.getBroadcast(this, vacationData.hashCode(), intent, PendingIntent.FLAG_IMMUTABLE)
+//                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
+//                }
             }
+
             addDialog.setNegativeButton("Cancel") {
                     dialog,_ ->
                 dialog.dismiss()
@@ -134,8 +142,9 @@ class MainActivity : AppCompatActivity() {
             addDialog.create()
             addDialog.show()
         }
+//        vacationAdapter.downloadImageMethod
 
-        vacationAdapter.onItemClick = {
+        vacationAdapter.onItemClick = fun(it: VacationData) {
             val start = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(it.startDate)
 
             // the API only gives the forecast for 5 days on free version; this is what I'm checking here
@@ -144,10 +153,13 @@ class MainActivity : AppCompatActivity() {
                 intent.putExtra("vacationdata", it)
                 startActivity(intent)
             } else {
-                Toast.makeText(this, "Wait until you get closer to the start date of your vacation", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Wait until you get closer to the start date of your vacation",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
-
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

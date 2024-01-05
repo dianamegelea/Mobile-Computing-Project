@@ -1,6 +1,6 @@
 package com.example.vacationplanner.view
 
-import android.content.Context
+import android.annotation.SuppressLint
 import android.preference.PreferenceManager
 import android.view.LayoutInflater
 import android.view.View
@@ -11,10 +11,16 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.vacationplanner.R
 import com.example.vacationplanner.api_data.GlideApp
 import com.example.vacationplanner.api_data.response.WeatherDetails
+import com.example.vacationplanner.model.VacationData
 
-class WeatherAdapter(val c: Context, val weatherList: List<WeatherDetails>) :
-    RecyclerView.Adapter<WeatherAdapter.WeatherViewHolder>() {
-    inner class WeatherViewHolder(forecastView: View) : RecyclerView.ViewHolder(forecastView) {
+class WeatherAdapter : RecyclerView.Adapter<WeatherAdapter.WeatherViewHolder>() {
+
+    private var weatherList = ArrayList<WeatherDetails>()
+    fun setData(weatherList: ArrayList<WeatherDetails>) {
+        this.weatherList = weatherList
+    }
+
+    inner class WeatherViewHolder(val forecastView: View) : RecyclerView.ViewHolder(forecastView) {
         val weatherDate: TextView = forecastView.findViewById(R.id.forecast_date)
         val weatherTemp: TextView = forecastView.findViewById(R.id.forecast_temperature)
         val weatherDesc: TextView = forecastView.findViewById(R.id.forecast_description)
@@ -31,26 +37,29 @@ class WeatherAdapter(val c: Context, val weatherList: List<WeatherDetails>) :
         return WeatherViewHolder(v)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: WeatherViewHolder, position: Int) {
         val weatherData = weatherList[position]
-        val firstLine : String = weatherData.dtTxt.substring(0, 10)
-        val newLine : String = "\n"
-        val secondLine : String = weatherData.dtTxt.substring(10)
-        val unit = PreferenceManager.getDefaultSharedPreferences(c).getString("unit_system", "metric")
-        var displayUnit : String = "°C"
-        if (unit == "imperial") {
-            displayUnit = "°F"
-        }
+        val firstLine: String = weatherData.dtTxt.substring(0, 10)
+        val newLine = "\n"
+        val secondLine: String = weatherData.dtTxt.substring(10)
+
+        // some diff way to read the preferences here...
+//        val unit = PreferenceManager.getDefaultSharedPreferences(holder.forecastView.context).getString("unit_system", "metric")
+//        val unit = PreferenceManager.getDefaultSharedPreferences(holder.forecastView.context)
+//            .getString("unit_system", "metric")
+        val displayUnit = "°C"
+//        if (unit == "imperial") {
+//            displayUnit = "°F"
+//        }
 
         holder.weatherDate.text = "$firstLine$newLine$secondLine"
-        holder.weatherDesc.text = weatherData.weather.get(0).description
+        holder.weatherDesc.text = weatherData.weather[0].description
         holder.weatherTemp.text = weatherData.main.temp.toString() + displayUnit
-        val iconCode = weatherData.weather.get(0).icon
-        val iconUrl = "https://openweathermap.org/img/w/" + iconCode + ".png"
-        GlideApp.with(c)
+        val iconCode = weatherData.weather[0].icon
+        val iconUrl = "https://openweathermap.org/img/w/$iconCode.png"
+        GlideApp.with(holder.forecastView.context)
             .load(iconUrl)
             .into(holder.weatherIcon)
     }
-
-
 }

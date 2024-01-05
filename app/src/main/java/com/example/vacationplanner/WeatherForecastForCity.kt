@@ -2,29 +2,29 @@ package com.example.vacationplanner
 
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.example.vacationplanner.api_data.GlideApp
-import com.example.vacationplanner.api_data.WeatherAPIService
-import com.example.vacationplanner.api_data.response.APIResponse
+import com.example.vacationplanner.api_data.response.WeatherAPIResponse
 import com.example.vacationplanner.api_data.response.WeatherDetails
 import com.example.vacationplanner.model.VacationData
 import com.example.vacationplanner.view.WeatherAdapter
-import com.squareup.picasso.Picasso
+import com.example.vacationplanner.viewmodels.WeatherRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 
-// apel api: https://api.openweathermap.org/data/2.5/forecast?q=Bucharest&units=metric&appid=5699730c4a635c04e2f0edf20b7fb368
+class WeatherForecastForCity(private var weatherRepository: WeatherRepository) : AppCompatActivity() {
 
-class WeatherForecastForCity : AppCompatActivity() {
+//    private lateinit var weatherRepository: WeatherRepository
+
+//    fun setWeatherRepository(weatherRepository: WeatherRepository) {
+//        this.weatherRepository = weatherRepository
+//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,20 +39,20 @@ class WeatherForecastForCity : AppCompatActivity() {
             val fromDate : String = vacationData.startDate
             val days : Int = vacationData.noDays
 
-            val apiService = WeatherAPIService()
-            val metric = PreferenceManager.getDefaultSharedPreferences(applicationContext).getString("unit_system", "metric")
+//            val metric = PreferenceManager.getDefaultSharedPreferences(applicationContext).getString("unit_system", "metric")
+            val metric = "metric"
 
-
-            var response : APIResponse? = null
+            var response : WeatherAPIResponse? = null
             GlobalScope.launch(Dispatchers.Main) {
                 try {
-                    response  = apiService.getWeatherForecast(city, metric!!).await()
+                    response  = weatherRepository.getWeatherForecastForCity(city, metric!!).await()
                 } catch (exception:Exception) {
                     if(exception is HttpException && exception.code()==401)
                         print(exception.message().toString())
                 }
                 val weatherDetails : List<WeatherDetails> = filterWeatherDetails(response!!.list, fromDate, days)
-                val adapter = WeatherAdapter(this@WeatherForecastForCity, weatherDetails)
+                val adapter = WeatherAdapter()
+                adapter.setData(ArrayList(weatherDetails))
                 recycler_view.adapter = adapter
             }
 
