@@ -20,15 +20,11 @@ import kotlinx.coroutines.withContext
 class VacationAdapter : RecyclerView.Adapter<VacationAdapter.VacationViewHolder>() {
     var onItemClick: ((VacationData) -> Unit)? = null
 
-    private var vacationList = ArrayList<VacationData>()
+    var vacationList: MutableList<VacationData> = mutableListOf()
 
     lateinit var imageRepository : ImageRepository
 
-//    fun setImageRepository(imageRepository : ImageRepository) {
-//        this.imageRepository = imageRepository
-//    }
-
-    fun setData(vacationList: ArrayList<VacationData>) {
+    fun setData(vacationList: MutableList<VacationData>) {
         this.vacationList = vacationList
     }
 

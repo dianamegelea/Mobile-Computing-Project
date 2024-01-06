@@ -10,5 +10,5 @@ interface WeatherAPIService {
     suspend fun getWeatherForecast(
         @Query("q") city : String,
         @Query("units") measurement : String = "metric"
-    ) : Deferred<WeatherAPIResponse>
+    ) : WeatherAPIResponse
 }

@@ -35,6 +35,10 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var appViewModel: AppViewModel
 
+    var vacationList: MutableList<VacationData> = mutableListOf()
+
+    lateinit var vacationAdapter: VacationAdapter
+
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +62,7 @@ class MainActivity : AppCompatActivity() {
         recView = findViewById(R.id.recycleview)
 
         vacationAdapter = appViewModel.getVacationAdapter();
+        vacationAdapter.vacationList = vacationList
 
         recView.layoutManager = LinearLayoutManager(this)
         recView.adapter = vacationAdapter
@@ -151,6 +156,7 @@ class MainActivity : AppCompatActivity() {
             if (isDateWithinRange(start)) {
                 val intent = Intent(this, WeatherForecastForCity::class.java)
                 intent.putExtra("vacationdata", it)
+//                intent.putExtra("repo", appViewModel.weatherRepository)
                 startActivity(intent)
             } else {
                 Toast.makeText(
@@ -224,10 +230,5 @@ class MainActivity : AppCompatActivity() {
 
         // Display the notification
         notificationManager.notify(notificationId, notificationBuilder.build())
-    }
-
-    companion object {
-        var vacationList: MutableList<VacationData> = mutableListOf()
-        lateinit var vacationAdapter: VacationAdapter
     }
 }
