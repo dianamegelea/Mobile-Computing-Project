@@ -36,7 +36,7 @@ class WeatherForecastForCity : AppCompatActivity() {
 
         val vacationData: VacationData? =
             intent.getParcelableExtra("vacationdata", VacationData::class.java)
-        appViewModel = ViewModelProvider(this, AppViewModelFactory())[AppViewModel::class.java]
+        appViewModel = ViewModelProvider(this, AppViewModelFactory(this.application, ))[AppViewModel::class.java]
         val weatherRepository: WeatherRepository = appViewModel.weatherRepository
 
         if (vacationData != null) {

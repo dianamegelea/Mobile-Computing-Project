@@ -4,9 +4,12 @@ import android.annotation.SuppressLint
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -19,6 +22,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vacationplanner.model.VacationData
 import com.example.vacationplanner.view.VacationAdapter
+import com.example.vacationplanner.viewmodel.VacationViewModel
+import com.example.vacationplanner.viewmodel.VacationViewModelFactory
 import com.example.vacationplanner.viewmodels.AppViewModel
 import com.example.vacationplanner.viewmodels.AppViewModelFactory
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -34,6 +39,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recView : RecyclerView
 
     private lateinit var appViewModel: AppViewModel
+    private lateinit var vacationViewModel: VacationViewModel
 
     var vacationList: MutableList<VacationData> = mutableListOf()
 
@@ -44,25 +50,45 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //retrieve existing vacation details from shared prefs
-        val sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
-        val json = sharedPreferences.getString("vacationList", null)
-        val list : List<VacationData>? = if (json != null) {
-            val type = object : TypeToken<List<VacationData>>() {}.type
-            Gson().fromJson<List<VacationData>>(json, type)
-        } else {
-            mutableListOf()
+        vacationViewModel = ViewModelProvider(this, VacationViewModelFactory(this.application))[VacationViewModel::class.java]
+        appViewModel = ViewModelProvider(this, AppViewModelFactory(this.application))[AppViewModel::class.java]
+
+        vacationAdapter = appViewModel.getVacationAdapter();
+
+        vacationViewModel.allVacations.observe(this) { vacation ->
+            // Update the cached copy of the words in the adapter.
+            vacation.let {
+                vacationAdapter.vacationList = it.toMutableList()
+                vacationAdapter.notifyDataSetChanged()
+            }
         }
 
-        appViewModel = ViewModelProvider(this, AppViewModelFactory())[AppViewModel::class.java]
+        fun isOnline(context: Context): Boolean {
+            val connectivityManager =
+                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            if (connectivityManager != null) {
+                val capabilities =
+                    connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                if (capabilities != null) {
+                    if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                        return true
+                    } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                        return true
+                    } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                        return true
+                    }
+                }
+            }
+            return false
+        }
 
-        vacationList = ArrayList(list.orEmpty())
+
+//        vacationList = ArrayList(list.orEmpty())
 
         addButton = findViewById(R.id.floatingButton)
         recView = findViewById(R.id.recycleview)
 
-        vacationAdapter = appViewModel.getVacationAdapter();
-        vacationAdapter.vacationList = vacationList
+//        vacationAdapter.vacationList = vacationList
 
         recView.layoutManager = LinearLayoutManager(this)
         recView.adapter = vacationAdapter
@@ -102,41 +128,15 @@ class MainActivity : AppCompatActivity() {
                 val name = cityName.text.toString()
                 val date = startDate.text.toString()
                 val days = nrDays.text.toString().toInt()
-                val vacationData = VacationData(name, date, days)
+                val vacationData = VacationData(name, date, null, days)
+
+                vacationViewModel.insert(vacationData)
                 vacationList.add(vacationData)
                 vacationAdapter.notifyDataSetChanged()
                 Toast.makeText(this, "Adding vacation...", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
 
-                val editor = sharedPreferences.edit()
-                val updatedJson = Gson().toJson(vacationList)
-                editor.putString("vacationList", updatedJson)
-                editor.apply()
 
-//                val daysDifference = getDaysDifference(date)
-//                if (daysDifference <= 3) {
-//                    displayNotification("Upcoming Vacation", "Your vacation to $name starts in $daysDifference days")
-//                } else {
-//                    val notificationId = System.currentTimeMillis().toInt()
-//
-//                    val calendar = Calendar.getInstance().apply {
-//                        timeInMillis = System.currentTimeMillis()
-//                        /*add(Calendar.DAY_OF_MONTH, daysDifference.toInt() - 3)
-//                        set(Calendar.HOUR_OF_DAY, 0)
-//                        set(Calendar.MINUTE, 0)
-//                        set(Calendar.SECOND, 0)*/
-//                        add(Calendar.MINUTE, 1) // for testing purposes
-//                    }
-
-//                    val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-//                    val intent = Intent(this, NotificationReceiver::class.java).apply {
-//                        putExtra("notificationId", notificationId)
-//                        putExtra("notificationTitle", "Upcoming Vacation")
-//                        putExtra("notificationContent", "Your vacation to $name starts in 3 days")
-//                    }
-//                    val pendingIntent = PendingIntent.getBroadcast(this, vacationData.hashCode(), intent, PendingIntent.FLAG_IMMUTABLE)
-//                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
-//                }
             }
 
             addDialog.setNegativeButton("Cancel") {
@@ -147,24 +147,29 @@ class MainActivity : AppCompatActivity() {
             addDialog.create()
             addDialog.show()
         }
-//        vacationAdapter.downloadImageMethod
 
         vacationAdapter.onItemClick = fun(it: VacationData) {
             val start = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(it.startDate)
 
             // the API only gives the forecast for 5 days on free version; this is what I'm checking here
-            if (isDateWithinRange(start)) {
-                val intent = Intent(this, WeatherForecastForCity::class.java)
-                intent.putExtra("vacationdata", it)
-//                intent.putExtra("repo", appViewModel.weatherRepository)
-                startActivity(intent)
-            } else {
+            if (!isOnline(application.applicationContext)) {
+                Toast.makeText(
+                    this,
+                    "Please go online to check the weather",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else if (!isDateWithinRange(start)) {
                 Toast.makeText(
                     this,
                     "Wait until you get closer to the start date of your vacation",
                     Toast.LENGTH_SHORT
                 ).show()
+            } else {
+                val intent = Intent(this, WeatherForecastForCity::class.java)
+                intent.putExtra("vacationdata", it)
+                startActivity(intent)
             }
+
         }
     }
 

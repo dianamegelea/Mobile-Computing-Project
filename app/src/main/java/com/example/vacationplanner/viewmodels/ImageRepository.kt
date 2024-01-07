@@ -12,5 +12,5 @@ class ImageRepository {
         apiKey: String,
         cx: String,
         searchType: String = "image"
-    ) = retrofit.searchImages(query, apiKey, cx, searchType)
+        ) = retrofit.searchImages(query, apiKey, cx, searchType)
 }
