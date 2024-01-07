@@ -4,7 +4,7 @@ import com.example.vacationplanner.networking.GoogleCustomSearchService
 import com.example.vacationplanner.networking.ImageDownloadClient
 
 class ImageRepository {
-    val retrofit =
+    private val retrofit: GoogleCustomSearchService =
         ImageDownloadClient.getRetrofitInstance().create(GoogleCustomSearchService::class.java)
 
     suspend fun searchImage(

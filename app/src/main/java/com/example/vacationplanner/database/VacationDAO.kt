@@ -9,8 +9,6 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.vacationplanner.model.VacationData
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface VacationDao {

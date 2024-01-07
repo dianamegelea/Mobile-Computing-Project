@@ -1,7 +1,6 @@
 package com.example.vacationplanner.view
 
 import android.annotation.SuppressLint
-import android.preference.PreferenceManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.vacationplanner.R
 import com.example.vacationplanner.api_data.GlideApp
 import com.example.vacationplanner.api_data.response.WeatherDetails
-import com.example.vacationplanner.model.VacationData
 
 class WeatherAdapter : RecyclerView.Adapter<WeatherAdapter.WeatherViewHolder>() {
 
@@ -43,15 +41,7 @@ class WeatherAdapter : RecyclerView.Adapter<WeatherAdapter.WeatherViewHolder>() 
         val firstLine: String = weatherData.dtTxt.substring(0, 10)
         val newLine = "\n"
         val secondLine: String = weatherData.dtTxt.substring(10)
-
-        // some diff way to read the preferences here...
-//        val unit = PreferenceManager.getDefaultSharedPreferences(holder.forecastView.context).getString("unit_system", "metric")
-//        val unit = PreferenceManager.getDefaultSharedPreferences(holder.forecastView.context)
-//            .getString("unit_system", "metric")
         val displayUnit = "°C"
-//        if (unit == "imperial") {
-//            displayUnit = "°F"
-//        }
 
         holder.weatherDate.text = "$firstLine$newLine$secondLine"
         holder.weatherDesc.text = weatherData.weather[0].description

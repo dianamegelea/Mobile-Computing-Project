@@ -14,7 +14,7 @@ import com.bumptech.glide.request.transition.Transition
 import com.example.vacationplanner.R
 import com.example.vacationplanner.converters.Converters
 import com.example.vacationplanner.model.VacationData
-import com.example.vacationplanner.repository.VacationRepository
+import com.example.vacationplanner.viewmodels.VacationRepository
 import com.example.vacationplanner.viewmodels.ImageRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,14 +29,10 @@ class VacationAdapter : RecyclerView.Adapter<VacationAdapter.VacationViewHolder>
     lateinit var imageRepository : ImageRepository
     lateinit var vacationRepository: VacationRepository
 
-    fun setData(vacationList: MutableList<VacationData>) {
-        this.vacationList = vacationList
-    }
-
     inner class VacationViewHolder(val v: View) : RecyclerView.ViewHolder(v) {
-        val city_name = v.findViewById<TextView>(R.id.cityname)
-        val start_date = v.findViewById<TextView>(R.id.startdate)
-        val nr_days = v.findViewById<TextView>(R.id.nrofdays)
+        val cityName: TextView = v.findViewById(R.id.cityname)
+        val startDate: TextView = v.findViewById(R.id.startdate)
+        val nrDays: TextView = v.findViewById(R.id.nrofdays)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VacationViewHolder {
@@ -45,9 +41,6 @@ class VacationAdapter : RecyclerView.Adapter<VacationAdapter.VacationViewHolder>
         return VacationViewHolder(v)
     }
 
-//    fun setDownloadImageMethod(downloadImageMethod: ((query: String, apiKey: String, cx: String) -> String)) {
-//        this.downloadImageMethod = downloadImageMethod
-//    }
     private suspend fun downloadImage(query: String, apiKey: String, cx: String): String? {
         try {
             val response = imageRepository.searchImage(query, apiKey, cx)
@@ -63,9 +56,9 @@ class VacationAdapter : RecyclerView.Adapter<VacationAdapter.VacationViewHolder>
 
     override fun onBindViewHolder(holder: VacationViewHolder, position: Int) {
         val vacationItem = vacationList[position]
-        holder.city_name.text = vacationItem.cityName
-        holder.start_date.text = vacationItem.startDate
-        holder.nr_days.text = vacationItem.noDays.toString()
+        holder.cityName.text = vacationItem.cityName
+        holder.startDate.text = vacationItem.startDate
+        holder.nrDays.text = vacationItem.noDays.toString()
 
         if (vacationItem.imageBlob != null) {
             val bitmap = Converters.Base64ToBitmap(vacationItem.imageBlob)

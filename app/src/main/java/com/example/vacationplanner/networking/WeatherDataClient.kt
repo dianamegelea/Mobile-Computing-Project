@@ -30,25 +30,4 @@ object WeatherDataClient {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
-
-
-    // To be movedddddd
-//    operator fun invoke() : WeatherAPIService {
-//        val requestInterceptor =  Interceptor { chain ->
-//            val url = chain.request().url().newBuilder().addQueryParameter("appid", API_KEY).build()
-//            val request = chain.request().newBuilder().url(url).build()
-//            return@Interceptor chain.proceed(request)
-//        }
-//
-//        val okHttpClient = OkHttpClient.Builder().addInterceptor(requestInterceptor).build()
-//
-//        return Retrofit.Builder()
-//            .client(okHttpClient)
-//            .baseUrl(BASE_URL)
-//            .addCallAdapterFactory(CoroutineCallAdapterFactory())
-//            .addConverterFactory(GsonConverterFactory.create())
-//            .build()
-//            .create(WeatherAPIService::class.java)
-//    }
-
 }

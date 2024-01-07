@@ -1,4 +1,4 @@
-package com.example.vacationplanner.repository
+package com.example.vacationplanner.viewmodels
 
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
@@ -18,7 +18,6 @@ class VacationRepository(private val database: VacationDatabase) {
         it.asDomainModel()
     }
 
-    @Suppress("RedundantSuspendModifier")
     @WorkerThread
     suspend fun updateVacationImage(cityName : String, imageBlob : String) {
         withContext(Dispatchers.IO) {
@@ -26,7 +25,6 @@ class VacationRepository(private val database: VacationDatabase) {
         }
     }
 
-    @Suppress("RedundantSuspendModifier")
     @WorkerThread
     suspend fun insertVacation(vacationEntity: VacationData) {
         withContext(Dispatchers.IO) {

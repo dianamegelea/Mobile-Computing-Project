@@ -1,19 +1,17 @@
 
-package com.example.vacationplanner.viewmodel;
+package com.example.vacationplanner.viewmodels
 
 import android.app.Application
 import androidx.lifecycle.LiveData
-import com.example.vacationplanner.repository.VacationRepository
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.vacationplanner.database.VacationDatabase
 import com.example.vacationplanner.model.VacationData
 import kotlinx.coroutines.launch
 
-class VacationViewModel(val repository: VacationRepository) : ViewModel() {
+class VacationViewModel(private val repository: VacationRepository) : ViewModel() {
 
     val allVacations: LiveData<List<VacationData>> = repository.allVacations
 

@@ -6,32 +6,25 @@ import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
-import android.view.MenuItem
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.core.app.NotificationCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vacationplanner.model.VacationData
 import com.example.vacationplanner.view.VacationAdapter
-import com.example.vacationplanner.viewmodel.VacationViewModel
-import com.example.vacationplanner.viewmodel.VacationViewModelFactory
+import com.example.vacationplanner.viewmodels.VacationViewModel
+import com.example.vacationplanner.viewmodels.VacationViewModelFactory
 import com.example.vacationplanner.viewmodels.AppViewModel
 import com.example.vacationplanner.viewmodels.AppViewModelFactory
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 class MainActivity : AppCompatActivity() {
@@ -41,9 +34,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appViewModel: AppViewModel
     private lateinit var vacationViewModel: VacationViewModel
 
-    var vacationList: MutableList<VacationData> = mutableListOf()
+    private var vacationList: MutableList<VacationData> = mutableListOf()
 
-    lateinit var vacationAdapter: VacationAdapter
+    private lateinit var vacationAdapter: VacationAdapter
 
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,7 +46,7 @@ class MainActivity : AppCompatActivity() {
         vacationViewModel = ViewModelProvider(this, VacationViewModelFactory(this.application))[VacationViewModel::class.java]
         appViewModel = ViewModelProvider(this, AppViewModelFactory(this.application))[AppViewModel::class.java]
 
-        vacationAdapter = appViewModel.getVacationAdapter();
+        vacationAdapter = appViewModel.getVacationAdapter()
 
         vacationViewModel.allVacations.observe(this) { vacation ->
             // Update the cached copy of the words in the adapter.
@@ -83,12 +76,8 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-//        vacationList = ArrayList(list.orEmpty())
-
         addButton = findViewById(R.id.floatingButton)
         recView = findViewById(R.id.recycleview)
-
-//        vacationAdapter.vacationList = vacationList
 
         recView.layoutManager = LinearLayoutManager(this)
         recView.adapter = vacationAdapter
@@ -158,7 +147,7 @@ class MainActivity : AppCompatActivity() {
                     "Please go online to check the weather",
                     Toast.LENGTH_SHORT
                 ).show()
-            } else if (!isDateWithinRange(start)) {
+            } else if (!isDateWithinRange(start!!)) {
                 Toast.makeText(
                     this,
                     "Wait until you get closer to the start date of your vacation",
@@ -173,67 +162,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.settings_menu, menu)
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.action_settings -> {
-                val intent = Intent(this, SettingsActivity::class.java)
-                startActivity(intent)
-            }
-        }
-        return super.onOptionsItemSelected(item)
-    }
-
     private fun isDateWithinRange(startDate: Date): Boolean {
         val currentDate = Calendar.getInstance().time
         val endDate = calculateDateAfterNDays(currentDate, 5)
         return startDate <= endDate
     }
 
-    private fun calculateDateAfterNDays(D: Date, N: Int): Date {
+    private fun calculateDateAfterNDays(date: Date, noDays: Int): Date {
         val calendar = Calendar.getInstance()
-        calendar.time = D
-        calendar.add(Calendar.DAY_OF_MONTH, N)
+        calendar.time = date
+        calendar.add(Calendar.DAY_OF_MONTH, noDays)
         return calendar.time
-    }
-
-    private fun getDaysDifference(startDate: String): Long {
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val currentDate = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.time
-        val vacationDate = dateFormat.parse(startDate)
-        val difference = vacationDate?.time?.minus(currentDate.time)
-        return difference?.div(86400000) ?: 0
-    }
-
-
-    private fun displayNotification(title: String, content: String) {
-        val notificationId = System.currentTimeMillis().toInt()
-        val channelId = "VacationChannel"
-
-        val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.notification)
-            .setContentTitle(title)
-            .setContentText(content)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        // Create the notification channel (required for Android 8.0 Oreo and above)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, "Vacation Notifications", NotificationManager.IMPORTANCE_DEFAULT)
-            notificationManager.createNotificationChannel(channel)
-        }
-
-        // Display the notification
-        notificationManager.notify(notificationId, notificationBuilder.build())
     }
 }
