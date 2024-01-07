@@ -1,7 +1,7 @@
 package com.example.vacationplanner.api_data.response
 
 
-data class APIResponse(
+data class WeatherAPIResponse(
     val cod: String,
     val message: Int,
     val cnt: Int,
