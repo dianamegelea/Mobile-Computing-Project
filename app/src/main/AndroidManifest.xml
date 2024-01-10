@@ -12,10 +12,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.VacationPlanner">
         <activity
-            android:name=".WeatherForecastForCity"
+            android:name=".ui.WeatherActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

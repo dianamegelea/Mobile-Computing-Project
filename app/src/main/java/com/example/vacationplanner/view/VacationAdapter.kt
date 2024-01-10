@@ -14,20 +14,18 @@ import com.bumptech.glide.request.transition.Transition
 import com.example.vacationplanner.R
 import com.example.vacationplanner.converters.Converters
 import com.example.vacationplanner.model.VacationData
-import com.example.vacationplanner.viewmodels.VacationRepository
-import com.example.vacationplanner.viewmodels.ImageRepository
+import com.example.vacationplanner.repository.VacationRepository
+import com.example.vacationplanner.repository.ImageRepository
+import com.example.vacationplanner.viewmodels.VacationViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class VacationAdapter : RecyclerView.Adapter<VacationAdapter.VacationViewHolder>() {
+class VacationAdapter(private val vacationModel : VacationViewModel) : RecyclerView.Adapter<VacationAdapter.VacationViewHolder>() {
     var onItemClick: ((VacationData) -> Unit)? = null
 
     var vacationList: MutableList<VacationData> = mutableListOf()
-
-    lateinit var imageRepository : ImageRepository
-    lateinit var vacationRepository: VacationRepository
 
     inner class VacationViewHolder(val v: View) : RecyclerView.ViewHolder(v) {
         val cityName: TextView = v.findViewById(R.id.cityname)
@@ -41,19 +39,6 @@ class VacationAdapter : RecyclerView.Adapter<VacationAdapter.VacationViewHolder>
         return VacationViewHolder(v)
     }
 
-    private suspend fun downloadImage(query: String, apiKey: String, cx: String): String? {
-        try {
-            val response = imageRepository.searchImage(query, apiKey, cx)
-            val items = response.items
-            if (items.isNotEmpty()) {
-                return items[0].link
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return null
-    }
-
     override fun onBindViewHolder(holder: VacationViewHolder, position: Int) {
         val vacationItem = vacationList[position]
         holder.cityName.text = vacationItem.cityName
@@ -64,44 +49,28 @@ class VacationAdapter : RecyclerView.Adapter<VacationAdapter.VacationViewHolder>
             val bitmap = Converters.Base64ToBitmap(vacationItem.imageBlob)
             val drawable: Drawable = BitmapDrawable(holder.v.resources, bitmap)
             holder.v.background = drawable
+        } else if (vacationItem.searchURL == null) {
+            vacationModel.downloadLink(vacationItem.cityName)
         } else {
-            // Download image from Google search and set it as the background
-            CoroutineScope(Dispatchers.IO).launch {
-                val imageUrl = downloadImage(
-                    "most popular tourist attraction in " + vacationItem.cityName,
-                    "AIzaSyBj7YqeG3o2r0z4KoSN1rXWuh-EC0iJQeI",
-                    "63e20becb9609444f"
-                )
-
-                withContext(Dispatchers.Main) {
-                    if (imageUrl != null) {
-                        Glide.with(holder.v.context).load(imageUrl)
-                            .into(object : CustomViewTarget<View, Drawable>(holder.v) {
-                                override fun onLoadFailed(errorDrawable: Drawable?) {
-                                    // Handle failed image loading if needed
-                                }
-
-                                override fun onResourceReady(
-                                    resource: Drawable, transition: Transition<in Drawable>?
-                                ) {
-
-                                    val bitmap = Bitmap.createScaledBitmap((resource as BitmapDrawable).bitmap, 120, 120, false)
-                                    val bitmapBase64Encoded = Converters.BitmapToBase64(bitmap)
-
-                                    view.background = resource
-                                    CoroutineScope(Dispatchers.IO).launch {
-                                        vacationRepository.updateVacationImage(vacationItem.cityName, bitmapBase64Encoded!!)
-                                    }
-                                }
-
-                                override fun onResourceCleared(placeholder: Drawable?) {
-                                    // Not necessary in this case
-                                }
-                            })
+            Glide.with(holder.v.context).load(vacationItem.searchURL)
+                .into(object : CustomViewTarget<View, Drawable>(holder.v) {
+                    override fun onLoadFailed(errorDrawable: Drawable?) {
+                        // Handle failed image loading if needed
                     }
-                }
-            }
+
+                    override fun onResourceReady(
+                        resource: Drawable, transition: Transition<in Drawable>?
+                    ) {
+                        view.background = resource
+                        vacationModel.updateImage(vacationItem.cityName, resource)
+                    }
+
+                    override fun onResourceCleared(placeholder: Drawable?) {
+                        // Not necessary in this case
+                    }
+                })
         }
+
         holder.itemView.setOnClickListener {
             onItemClick?.invoke(vacationItem)
         }

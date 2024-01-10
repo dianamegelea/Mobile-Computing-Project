@@ -1,4 +1,4 @@
-package com.example.vacationplanner.viewmodels
+package com.example.vacationplanner.repository
 
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
@@ -13,7 +13,6 @@ import kotlinx.coroutines.withContext
 
 class VacationRepository(private val database: VacationDatabase) {
 
-
     val allVacations : LiveData<List<VacationData>> = database.vacationDao().getVacations().map {
         it.asDomainModel()
     }
@@ -26,7 +25,14 @@ class VacationRepository(private val database: VacationDatabase) {
     }
 
     @WorkerThread
-    suspend fun insertVacation(vacationEntity: VacationData) {
+    suspend fun updateSearchURL(cityName : String, urlString : String) {
+        withContext(Dispatchers.IO) {
+            database.vacationDao().updateSearchURL(cityName, urlString)
+        }
+    }
+
+    @WorkerThread
+        suspend fun insertVacation(vacationEntity: VacationData) {
         withContext(Dispatchers.IO) {
             database.vacationDao().insertVacation(DatabaseVacationEntity(
                 vacationEntity.cityName,

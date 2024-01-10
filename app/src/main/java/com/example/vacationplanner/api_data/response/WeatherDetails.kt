@@ -4,6 +4,7 @@ package com.example.vacationplanner.api_data.response
 import com.google.gson.annotations.SerializedName
 
 data class WeatherDetails (
+    var city:String,
     val dt: Int,
     val main: Main,
     val weather: List<Weather>,
@@ -17,6 +18,6 @@ data class WeatherDetails (
     val dtTxt: String
 ) {
     override fun toString(): String {
-        return "WeatherDetails(dt=$dt, main=$main, weather=$weather, clouds=$clouds, wind=$wind, visibility=$visibility, pop=$pop, rain=$rain, sys=$sys, dtTxt='$dtTxt')"
+        return "WeatherDetails(city=$city, dt=$dt, main=$main, weather=$weather, clouds=$clouds, wind=$wind, visibility=$visibility, pop=$pop, rain=$rain, sys=$sys, dtTxt='$dtTxt')"
     }
 }

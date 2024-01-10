@@ -21,13 +21,14 @@ data class DatabaseVacationEntity (
      val startDate: String,
      val noDays: Int) {
 
-
     @PrimaryKey(autoGenerate = true)
     var vacationId: Int = 0
 
+    @ColumnInfo(name="searchURL")
+    var searchURL: String? = null
+
     @ColumnInfo(name="imageBLOB")
     var imageBLOB: String? = null
-
 }
 
 /**
@@ -38,6 +39,7 @@ fun List<DatabaseVacationEntity>.asDomainModel(): List<VacationData> {
         VacationData(
             cityName = it.cityName,
             startDate = it.startDate,
+            searchURL = it.searchURL,
             imageBlob = it.imageBLOB,
             noDays = it.noDays
         )
