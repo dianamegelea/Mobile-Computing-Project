@@ -15,19 +15,25 @@
   ~ limitations under the License.
   -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ui.MainActivity">
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/fragmentMC">
 
-    <androidx.fragment.app.FragmentContainerView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/my_nav_host_fragment"
-        android:name="androidx.navigation.fragment.NavHostFragment"
-        app:navGraph="@navigation/nav_graph"
-        app:defaultNavHost="true" />
+    <fragment
+        android:id="@+id/fragmentMC"
+        android:name="com.example.vacationplanner.ui.MainFragment"
+        android:label="fragment_mc"
+        tools:layout="@layout/fragment_main" >
+        <action
+            android:id="@+id/mainToWeather"
+            app:destination="@id/fragmentMC2" />
+    </fragment>
+    <fragment
+        android:id="@+id/fragmentMC2"
+        android:name="com.example.vacationplanner.ui.WeatherFragment"
+        android:label="fragment_mc"
+        tools:layout="@layout/fragment_main" />
 
-</FrameLayout>
+</navigation>

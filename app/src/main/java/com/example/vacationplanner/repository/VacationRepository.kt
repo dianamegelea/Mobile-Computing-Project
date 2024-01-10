@@ -19,26 +19,20 @@ class VacationRepository(private val database: VacationDatabase) {
 
     @WorkerThread
     suspend fun updateVacationImage(cityName : String, imageBlob : String) {
-        withContext(Dispatchers.IO) {
-            database.vacationDao().updateImage(cityName, imageBlob)
-        }
+        database.vacationDao().updateImage(cityName, imageBlob)
     }
 
     @WorkerThread
     suspend fun updateSearchURL(cityName : String, urlString : String) {
-        withContext(Dispatchers.IO) {
-            database.vacationDao().updateSearchURL(cityName, urlString)
-        }
+        database.vacationDao().updateSearchURL(cityName, urlString)
     }
 
     @WorkerThread
         suspend fun insertVacation(vacationEntity: VacationData) {
-        withContext(Dispatchers.IO) {
-            database.vacationDao().insertVacation(DatabaseVacationEntity(
-                vacationEntity.cityName,
-                vacationEntity.startDate,
-                vacationEntity.noDays
-            ))
-        }
+        database.vacationDao().insertVacation(DatabaseVacationEntity(
+            vacationEntity.cityName,
+            vacationEntity.startDate,
+            vacationEntity.noDays
+        ))
     }
 }

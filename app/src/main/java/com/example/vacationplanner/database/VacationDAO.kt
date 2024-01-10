@@ -16,13 +16,13 @@ interface VacationDao {
     fun getVacations(): LiveData<List<DatabaseVacationEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertVacation(vacationEntity: DatabaseVacationEntity)
+    suspend fun insertVacation(vacationEntity: DatabaseVacationEntity)
 
     @Query("UPDATE vacations SET imageBLOB = (CASE WHEN imageBLOB IS NULL THEN :blob ELSE imageBLOB END) WHERE cityName = :cityName")
-    fun updateImage (cityName : String, blob : String)
+    suspend fun updateImage (cityName : String, blob : String)
 
     @Query("UPDATE vacations SET searchURL = (CASE WHEN searchURL IS NULL THEN :searchUrl ELSE searchURL END) WHERE cityName = :cityName")
-    fun updateSearchURL (cityName : String, searchUrl: String)
+    suspend fun updateSearchURL (cityName : String, searchUrl: String)
 }
 
 @Database(entities = [DatabaseVacationEntity::class], version = 1
